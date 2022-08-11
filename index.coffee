@@ -1,21 +1,31 @@
-##
-## Browser Init
-##
+#
+# Browser Init
+#
 Puppeteer = require 'puppeteer'
 
 BROWSER = null
-do init = ->
+do initBrowser = ->
   # Launch Puppeteer, an API wrapper around headless chrome
-  BROWSER = await Puppeteer.launch headless: true, args: "--disable-gpu --no-zygote --no-sandbox --disable-setuid-sandbox --disable-dev-shm-usage --dumpio ".split ' '
+  BROWSER ?= await Puppeteer.launch headless: true, args: [
+    '--no-sandbox'
+    '--disable-setuid-sandbox'
+    '--disable-dev-shm-usage'
+    '--no-first-run'
+    '--no-zygote'
+    '--headless'
+    '--disable-gpu'
+  ]
   # if the browser disconnects, try to re-initialize it for the next request
-  BROWSER.on 'disconnect', init
+  BROWSER.on 'disconnect', ->
+    BROWSER = null
+    browser()
 
-
-##
-## The validation
-##
+#
+# The validation
+#
 isValid = (email='')->
   # Open a new page in Chrome
+  await initBrowser()
   page = await BROWSER.newPage()
 
   # Set the HTML content, with the text in an email input
@@ -32,9 +42,9 @@ isValid = (email='')->
   valid
 
 
-##
-## The webserver
-##
+#
+# The webserver
+#
 app  = do require 'express'
 
 app.get '/:email?', (req, res)->
@@ -56,4 +66,10 @@ app.get '/:email?', (req, res)->
   res.send email
 
 
-app.listen process.env.PORT or 2222
+#
+# Either start a local server, or hook up to GCF
+#
+if process.env.NODE_ENV is 'production'
+  exports.handler = app
+else
+  app.listen process.env.PORT or 2222

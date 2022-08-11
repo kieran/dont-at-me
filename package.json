@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "start": "npx coffee index.coffee",
-    "dev": "npx nodemon index.coffee"
+    "dev": "npx nodemon index.coffee",
+    "build": "npx coffee -c -b index.coffee"
   },
   "author": "",
   "license": "ISC",
