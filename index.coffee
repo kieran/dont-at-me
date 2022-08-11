@@ -23,13 +23,17 @@ do initBrowser = ->
 #
 # The validation
 #
-isValid = (email='')->
+SUPPORTED_TYPES = 'email url tel'.split ' '
+
+isValid = (value='', type)->
+  return Promise.resolve false unless type in SUPPORTED_TYPES
+
   # Open a new page in Chrome
   await initBrowser()
   page = await BROWSER.newPage()
 
   # Set the HTML content, with the text in an email input
-  await page.setContent "<html><input type='email' value='#{email}'></html>"
+  await page.setContent "<html><input type='#{type}' value='#{value}'></html>"
 
   # We can ask the DOM is an element matches a CSS selctor. A valid
   # email input would match a ':valid' CSS pseudo selector - evaluated in Chrome's console
@@ -47,24 +51,25 @@ isValid = (email='')->
 #
 app  = do require 'express'
 
-app.get '/:email?', (req, res)->
-  email = req.params.email
+TYPE_PATTERN = SUPPORTED_TYPES.join '|'
+VALUE_PATTERN = '[\\w\\d\\s+%\\|\\/:.@\\-_]+'
 
-  # Ensure we were provided a non-empty string
-  unless email
-    return res.status(400).send 'No email provided'
+app.get "/:type(#{TYPE_PATTERN})/:value(#{VALUE_PATTERN})", (req, res)->
+  { type, value } = req.params
 
   # Test the validity of the email address
-  valid = await isValid email
+  valid = await isValid value, type
 
   # If invalid, throw an HTTP 422 with a friendly error message
   unless valid
-    return res.status(422).send "Invalid email address: '#{email}'"
+    return res.status(422).send "🚫 Invalid #{type}: '#{value}'"
 
   # If we're still here, the email must be valid!
   # return the email address with an HTTP 200 status code
-  res.send email
+  res.send "✅ Valid #{type}: '#{value}'"
 
+app.get '*', (req,res)->
+  res.status(400).send "🚫 Requests should be in the form '/type/value' where type is one of: #{SUPPORTED_TYPES.join ', '}"
 
 #
 # Either start a local server, or hook up to GCF

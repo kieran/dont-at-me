@@ -15,17 +15,29 @@ npm run dev
 
 ## Valid request
 ```
-GET /rube@goldberg.io
-[200] rube@goldberg.io
+GET /email/rube@goldberg.io
+[200] ✅ Valid email: 'rube@goldberg.io'
+
+GET /url/http://lol.com
+[200] ✅ Valid url: 'http://lol.com'
+
+GET /url/scheme:path
+[200] ✅ Valid url: 'scheme:path'
+
+GET /tel/1 800 5-FLOWER
+[200] ✅ Valid tel: '1 800 5-FLOWER'
 ```
 
 ## Invalid requests
 ```
-GET /not-an-email
-[422] Invalid email address: 'not-an-email'
+GET /email/not-an-email
+[422] 🚫 Invalid email: 'not-an-email'
+
+GET /url/http://lol.com
+[422] 🚫 Invalid url: 'neat-o'
 ```
 
 ```
 GET /
-[400] No email provided
+[400] 🚫 Requests should be in the form `/type/value` where type is one of: email, url, tel
 ```
