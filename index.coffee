@@ -52,7 +52,7 @@ isValid = (value='', type)->
 app  = do require 'express'
 
 TYPE_PATTERN = SUPPORTED_TYPES.join '|'
-VALUE_PATTERN = '[\\w\\d\\s+%\\|\\/:.@\\-_]+'
+VALUE_PATTERN = '[\\w\\d\\s+%\\|\\/\\[\\]:.@\\-_]+'
 
 app.get "/:type(#{TYPE_PATTERN})/:value(#{VALUE_PATTERN})", (req, res)->
   { type, value } = req.params
